@@ -33,7 +33,7 @@ model:
 
 topics:
   Food Quality: [food, taste, delicious, cold, fresh, overcooked, undercooked, pizza, pasta, burger, sushi, meal, dish]
-  Service: [service, staff, waiter, waitress, server, manager, rude, friendly, polite, attentive]
+  Service: [services, staff, waiter, waitress, server, manager, rude, friendly, polite, attentive]
   Waiting Time: [wait, waiting, minutes, hour, line, queue, slow, reservation, table]
   Price: [price, expensive, cheap, overpriced, value, money, cost]
   Cleanliness: [clean, dirty, bathroom, restroom, smell, hygiene]

@@ -1,0 +1,155 @@
+{
+  "info": {
+    "_postman_id": "90391bef-ca05-441c-b2cd-8f55a7e3279d",
+    "name": "Yelp-Review-Intelligence-API",
+    "description": "Postman collection for testing the Yelp Review Intelligence FastAPI service.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "1878453"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Model Info",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/model-info",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "model-info"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Analyze Review - Mixed Complaint",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"review_text\": \"Food was amazing but we waited 40 minutes before getting a table. The waiter was polite, but the waiting time was frustrating.\",\n  \"categories\": \"Italian Restaurant, Pasta, Pizza\",\n  \"sample_tips\": \"Busy on weekends. Make a reservation.\",\n  \"city\": \"Las Vegas\",\n  \"state\": \"NV\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-review",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "analyze-review"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Analyze Review - Positive",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reviews\": [\n    {\n      \"review_text\": \"Very bad personnel and very poor menu..\",\n      \"categories\": \"Restaurant, Pizza, Italian\",\n      \"sample_tips\": \"Great place for dinner.\",\n      \"city\": \"Philadelphia\",\n      \"state\": \"PA\"\n    },\n    {\n      \"review_text\": \"The burgers were excellent and the fries were crispy. Service was quick and the restaurant was very clean.\",\n      \"categories\": \"Restaurant, Burgers, Fast Food\",\n      \"sample_tips\": \"Perfect for lunch.\",\n      \"city\": \"Phoenix\",\n      \"state\": \"AZ\"\n    },\n    {\n      \"review_text\": \"We waited more than an hour for our food. The waiter apologized, but the food arrived cold and the order was incorrect.\",\n      \"categories\": \"Restaurant, Seafood\",\n      \"sample_tips\": \"Very busy on weekends.\",\n      \"city\": \"Las Vegas\",\n      \"state\": \"NV\"\n    },\n    {\n      \"review_text\": \"The restaurant looked beautiful and parking was easy, but the food was overpriced and the portions were very small.\",\n      \"categories\": \"Restaurant, Fine Dining\",\n      \"sample_tips\": \"Reservations recommended.\",\n      \"city\": \"Miami\",\n      \"state\": \"FL\"\n    },\n    {\n      \"review_text\": \"Amazing desserts, fantastic coffee, friendly staff, and a relaxing atmosphere. I highly recommend this place and will definitely return.\",\n      \"categories\": \"Cafe, Bakery, Dessert\",\n      \"sample_tips\": \"Try the cheesecake.\",\n      \"city\": \"Seattle\",\n      \"state\": \"WA\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-batch",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "analyze-batch"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Analyze Review - Negative High Severity",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"review_text\": \"Worst experience ever. The food was cold, the table was dirty, and the server was rude. I waited almost an hour and will never come back.\",\n  \"categories\": \"Restaurant, Burgers, Fast Food\",\n  \"sample_tips\": \"Avoid peak hours.\",\n  \"city\": \"Tampa\",\n  \"state\": \"FL\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-review",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "analyze-review"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Analyze Batch",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"reviews\": [\n    {\n      \"review_text\": \"Food was amazing but we waited 40 minutes before getting a table.\",\n      \"categories\": \"Italian Restaurant, Pasta, Pizza\",\n      \"sample_tips\": \"Busy on weekends.\",\n      \"city\": \"Las Vegas\",\n      \"state\": \"NV\"\n    },\n    {\n      \"review_text\": \"The restaurant was clean, the service was quick, and the burgers were fantastic.\",\n      \"categories\": \"Restaurant, Burgers\",\n      \"sample_tips\": \"Good for lunch.\",\n      \"city\": \"Tampa\",\n      \"state\": \"FL\"\n    },\n    {\n      \"review_text\": \"The food was overpriced and the parking situation was terrible.\",\n      \"categories\": \"Restaurant, Seafood\",\n      \"sample_tips\": \"Parking can be difficult.\",\n      \"city\": \"Philadelphia\",\n      \"state\": \"PA\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/analyze-batch",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "analyze-batch"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    }
+  ]
+}
