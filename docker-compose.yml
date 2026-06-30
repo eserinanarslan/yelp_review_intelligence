@@ -1,0 +1,11 @@
+services:
+  yelp-review-intelligence-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: yelp-review-intelligence-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app/src
+    restart: unless-stopped

@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/
+
+# Local data
+data/
+yelp_datasets/
+
+# Logs
+logs/
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Large / temporary files
+*.csv
+*.parquet
+*.pkl
+
+# Keep the deployable model artifact
+!models/sentiment_model.pkl
