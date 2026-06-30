@@ -23,7 +23,7 @@ data/
 yelp_datasets/
 
 # Models
-models/
+# models/
 
 # Outputs
 outputs/
@@ -42,3 +42,6 @@ logs/
 # Coverage
 .coverage
 htmlcov/
+
+# Logs
+logs/

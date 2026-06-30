@@ -1,8 +1,16 @@
 import argparse
+import sys
+
 import pandas as pd
+
 from yelp_review_intelligence.config import ProjectConfig
+from yelp_review_intelligence.exceptions import IntelligenceGenerationError
 from yelp_review_intelligence.intelligence import ReviewIntelligenceGenerator
+from yelp_review_intelligence.logger import setup_logger
 from yelp_review_intelligence.utils import save_json
+
+
+logger = setup_logger(__name__)
 
 
 def parse_args():
@@ -12,26 +20,56 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
-    args = parse_args()
-    config = ProjectConfig.from_yaml(args.config)
-    predictions_df = pd.read_pickle(config.processed_dir / "test_predictions.pkl")
-    generator = ReviewIntelligenceGenerator(config)
+def main() -> None:
+    """
+    Generate business-facing review intelligence outputs.
+    """
+    try:
+        args = parse_args()
+        logger.info("Starting intelligence output generation.")
+        logger.info("Using config file: %s", args.config)
 
-    topic_level_df = generator.create_topic_level_df(predictions_df)
-    business_insights = generator.create_business_insights(topic_level_df)
-    dashboard_output, overall_sentiment, topic_summary, representative_reviews = generator.create_dashboard_output(
-        predictions_df, topic_level_df, business_id=args.business_id
-    )
+        config = ProjectConfig.from_yaml(args.config)
 
-    topic_level_df.to_pickle(config.processed_dir / "topic_level_predictions.pkl")
-    business_insights.to_csv(config.output_dir / "business_topic_insights.csv", index=False)
-    overall_sentiment.to_csv(config.output_dir / "overall_sentiment_example_business.csv", index=False)
-    topic_summary.to_csv(config.output_dir / "topic_summary_example_business.csv", index=False)
-    representative_reviews.to_csv(config.output_dir / "representative_reviews_example_business.csv", index=False)
-    save_json(dashboard_output, config.output_dir / "dashboard_output_example_business.json")
-    print("Dashboard output generated.")
+        predictions_path = config.processed_dir / "test_predictions.pkl"
+        logger.info("Loading predictions from %s", predictions_path)
+
+        predictions_df = pd.read_pickle(predictions_path)
+        generator = ReviewIntelligenceGenerator(config)
+
+        topic_level_df = generator.create_topic_level_df(predictions_df)
+        business_insights = generator.create_business_insights(topic_level_df)
+
+        dashboard_output, overall_sentiment, topic_summary, representative_reviews = (
+            generator.create_dashboard_output(
+                predictions_df,
+                topic_level_df,
+                business_id=args.business_id,
+            )
+        )
+
+        topic_level_df.to_pickle(config.processed_dir / "topic_level_predictions.pkl")
+        business_insights.to_csv(config.output_dir / "business_topic_insights.csv", index=False)
+        overall_sentiment.to_csv(config.output_dir / "overall_sentiment_example_business.csv", index=False)
+        topic_summary.to_csv(config.output_dir / "topic_summary_example_business.csv", index=False)
+        representative_reviews.to_csv(config.output_dir / "representative_reviews_example_business.csv", index=False)
+
+        save_json(
+            dashboard_output,
+            config.output_dir / "dashboard_output_example_business.json",
+        )
+
+        logger.info("Dashboard output generated successfully.")
+        logger.info("Number of topic-level rows: %s", len(topic_level_df))
+        logger.info("Number of business insight rows: %s", len(business_insights))
+
+    except Exception as exc:
+        logger.exception("Intelligence output generation failed.")
+        raise IntelligenceGenerationError("Intelligence output generation failed.") from exc
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except IntelligenceGenerationError:
+        sys.exit(1)
