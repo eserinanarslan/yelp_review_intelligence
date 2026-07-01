@@ -43,5 +43,12 @@ logs/
 .coverage
 htmlcov/
 
-# Logs
-logs/
+# Large model artifacts
+models/bert_sentiment_model/
+models/textcnn/
+*.pt
+*.bin
+*.safetensors
+
+# Keep production lightweight model if needed
+!models/sentiment_model.pkl
