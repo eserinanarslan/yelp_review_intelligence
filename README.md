@@ -1,3 +1,5 @@
+![img.png](img.png)
+
 # Yelp Review Intelligence
 
 An end-to-end AI-powered NLP system that transforms unstructured customer reviews into actionable business intelligence for restaurant owners and multi-location restaurant operations teams.
