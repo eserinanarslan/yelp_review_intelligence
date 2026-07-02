@@ -5,18 +5,27 @@ from dataclasses import dataclass
 from yelp_review_intelligence.logger import setup_logger
 
 
+# Configure project logger
 logger = setup_logger(__name__)
 
 
 @dataclass
 class ActionRecommender:
     """
-    Maps detected business topics to recommended operational actions.
+    Business rule engine that converts detected complaint topics
+    into actionable operational recommendations.
+
+    This component is intentionally separated from the ML model,
+    allowing business rules to evolve independently of model training.
     """
 
     action_map: dict[str, str] | None = None
 
     def __post_init__(self) -> None:
+        """
+        Initialize the default topic-to-action mapping.
+        """
+
         if self.action_map is None:
             self.action_map = {
                 "Waiting Time": "Investigate staffing and table turnover during peak hours.",
@@ -30,12 +39,20 @@ class ActionRecommender:
             }
 
     def recommend(self, topics: list[str]) -> list[str]:
+        """
+        Generate business recommendations based on
+        the detected complaint topics.
+        """
+
         try:
             recommendations = []
 
+            # Convert each detected topic into a business action
             for topic in topics:
+
                 action = self.action_map.get(topic)
 
+                # Avoid duplicate recommendations
                 if action and action not in recommendations:
                     recommendations.append(action)
 
@@ -43,4 +60,7 @@ class ActionRecommender:
 
         except Exception as exc:
             logger.exception("Action recommendation failed.")
-            raise RuntimeError("Action recommendation failed.") from exc
+
+            raise RuntimeError(
+                "Action recommendation failed."
+            ) from exc

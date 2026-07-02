@@ -10,16 +10,18 @@ from yelp_review_intelligence.inference.topic_detector import TopicDetector
 from yelp_review_intelligence.logger import setup_logger
 
 
+# Configure project logger
 logger = setup_logger(__name__)
 
 
 @dataclass
 class ReviewAnalysisService:
     """
-    Orchestrates the complete review intelligence pipeline.
+    Orchestration service for the complete review intelligence pipeline.
 
-    API layer calls this service instead of directly calling model
-    or inference components.
+    The API layer calls this service instead of directly calling
+    individual ML or business-rule components. This keeps the API
+    layer clean and separates HTTP logic from business logic.
     """
 
     predictor: SentimentPredictor
@@ -35,9 +37,21 @@ class ReviewAnalysisService:
         city: str = "unknown",
         state: str = "unknown",
     ) -> dict[str, Any]:
+        """
+        Analyze a single review end-to-end.
+
+        Steps:
+        1. Predict sentiment and confidence.
+        2. Detect business-relevant topics.
+        3. Estimate severity.
+        4. Generate recommended actions.
+        5. Return a unified API-ready response.
+        """
+
         try:
             logger.info("Analyzing single review.")
 
+            # Run ML sentiment prediction
             sentiment_result = self.predictor.predict(
                 review_text=review_text,
                 categories=categories,
@@ -46,17 +60,23 @@ class ReviewAnalysisService:
                 state=state,
             )
 
+            # Detect business topics mentioned in the review
             topics = self.topic_detector.detect(review_text)
+
+            # Compute review length for severity scoring
             review_word_count = len(str(review_text or "").split())
 
+            # Estimate how critical the review is
             severity = self.severity_scorer.score(
                 review_text=review_text,
                 predicted_sentiment=sentiment_result["predicted_sentiment"],
                 review_word_count=review_word_count,
             )
 
+            # Convert detected topics into recommended business actions
             recommended_actions = self.recommender.recommend(topics)
 
+            # Return a standardized response consumed by the API layer
             return {
                 "predicted_sentiment": sentiment_result["predicted_sentiment"],
                 "confidence": sentiment_result["confidence"],
@@ -68,14 +88,29 @@ class ReviewAnalysisService:
 
         except Exception as exc:
             logger.exception("Review analysis failed.")
-            raise RuntimeError("Review analysis failed.") from exc
 
-    def analyze_batch(self, reviews: list[dict[str, Any]]) -> list[dict[str, Any]]:
+            raise RuntimeError(
+                "Review analysis failed."
+            ) from exc
+
+    def analyze_batch(
+        self,
+        reviews: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """
+        Analyze multiple reviews in a single call.
+
+        This reuses the single-review pipeline for each item,
+        ensuring consistent behavior between single and batch
+        inference.
+        """
+
         try:
             logger.info("Analyzing batch of %s reviews.", len(reviews))
 
             results = []
 
+            # Process each review using the same single-review workflow
             for review in reviews:
                 result = self.analyze_review(
                     review_text=review.get("review_text", ""),
@@ -91,4 +126,7 @@ class ReviewAnalysisService:
 
         except Exception as exc:
             logger.exception("Batch review analysis failed.")
-            raise RuntimeError("Batch review analysis failed.") from exc
+
+            raise RuntimeError(
+                "Batch review analysis failed."
+            ) from exc

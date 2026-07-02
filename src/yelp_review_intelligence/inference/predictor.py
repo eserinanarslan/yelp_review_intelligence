@@ -13,16 +13,19 @@ from yelp_review_intelligence.logger import setup_logger
 from yelp_review_intelligence.utils import load_model
 
 
+# Configure project logger
 logger = setup_logger(__name__)
 
 
 @dataclass
 class SentimentPredictor:
     """
-    Loads the trained sentiment model and exposes prediction methods.
+    Prediction engine responsible for loading the trained model
+    and performing sentiment inference.
 
     The model is loaded once during application startup and reused
-    for all API requests.
+    for all incoming API requests, reducing latency and avoiding
+    repeated disk I/O.
     """
 
     config: ProjectConfig
@@ -30,17 +33,27 @@ class SentimentPredictor:
 
     @classmethod
     def from_config(cls, config: ProjectConfig) -> "SentimentPredictor":
+        """
+        Factory method for loading the production model.
+        """
         model_path = config.model_dir / "sentiment_model.pkl"
 
         try:
             logger.info("Loading sentiment model from %s", model_path)
+
+            # Load the serialized production model
             model = load_model(model_path)
+
             logger.info("Sentiment model loaded successfully.")
+
             return cls(config=config, model=model)
 
         except Exception as exc:
             logger.exception("Failed to load sentiment model.")
-            raise ModelPersistenceError(f"Could not load model from {model_path}") from exc
+
+            raise ModelPersistenceError(
+                f"Could not load model from {model_path}"
+            ) from exc
 
     @staticmethod
     def build_input_frame(
@@ -51,19 +64,28 @@ class SentimentPredictor:
         state: str = "unknown",
     ) -> pd.DataFrame:
         """
-        Build a single-row dataframe matching the training feature schema.
+        Construct a single-row feature dataframe that matches
+        the exact schema used during model training.
+
+        Reusing the same feature engineering logic during
+        inference guarantees consistency between training
+        and production.
         """
+
+        # Handle missing optional inputs
         review_text = review_text or ""
         categories = categories or ""
         sample_tips = sample_tips or ""
         city = city or "unknown"
         state = state or "unknown"
 
+        # Generate numerical features
         review_word_count = len(review_text.split())
         review_char_count = len(review_text)
         tip_count = 1 if sample_tips.strip() else 0
         avg_tip_compliment = 0.0
 
+        # Build different text representations
         text_review_only = review_text
 
         text_review_categories = (
@@ -81,6 +103,7 @@ class SentimentPredictor:
             "\nLocation: " + city + ", " + state
         )
 
+        # Return the feature vector expected by the trained model
         return pd.DataFrame(
             [
                 {
@@ -105,9 +128,16 @@ class SentimentPredictor:
         state: str = "unknown",
     ) -> dict[str, Any]:
         """
-        Predict sentiment and confidence for a single review.
+        Predict the sentiment of a single customer review.
+
+        Returns:
+        - Predicted sentiment
+        - Prediction confidence
+        - Class probability distribution
         """
+
         try:
+            # Build inference features
             input_df = self.build_input_frame(
                 review_text=review_text,
                 categories=categories,
@@ -116,13 +146,17 @@ class SentimentPredictor:
                 state=state,
             )
 
+            # Run model inference
             prediction = self.model.predict(input_df)[0]
 
             confidence = None
             probabilities = {}
 
+            # Compute prediction probabilities if supported
             if hasattr(self.model, "predict_proba"):
+
                 proba = self.model.predict_proba(input_df)[0]
+
                 classes = self.model.named_steps["classifier"].classes_
 
                 probabilities = {
@@ -132,6 +166,7 @@ class SentimentPredictor:
 
                 confidence = float(np.max(proba))
 
+            # Return standardized prediction output
             return {
                 "predicted_sentiment": str(prediction),
                 "confidence": confidence,
@@ -140,4 +175,7 @@ class SentimentPredictor:
 
         except Exception as exc:
             logger.exception("Sentiment prediction failed.")
-            raise RuntimeError("Sentiment prediction failed.") from exc
+
+            raise RuntimeError(
+                "Sentiment prediction failed."
+            ) from exc
